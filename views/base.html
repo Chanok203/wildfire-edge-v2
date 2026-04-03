@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}พื้นฐาน{% endblock title %} | หน้างาน (Edge)</title>
+</head>
+
+<body>
+
+    <nav style="display: flex; gap: 16px;">
+        <a href="/">หน้าแรก</a>
+        <a href="/wind-sensor">เซ็นเซอร์ลม</a>
+    </nav>
+    <hr>
+
+    <header>
+
+    </header>
+
+    {% block content %}
+    {% endblock content %}
+
+
+    {% block scripts%}
+    {% endblock scripts%}
+</body>
+
+</html>
