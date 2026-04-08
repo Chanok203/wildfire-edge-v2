@@ -4,7 +4,7 @@ import { Server } from 'socket.io';
 
 import { app } from '@/app';
 import { config } from '@/configs';
-import { initWindSensorMQTT } from '@/modules/wind_sensor/wind_sensor.mqtt';
+import { initWindSensorMQTT } from '@/modules/wind/wind.mqtt';
 import { mqttLib } from '@/shared/libs/mqtt.lib';
 import { socketLib } from '@/shared/libs/socketio.lib';
 

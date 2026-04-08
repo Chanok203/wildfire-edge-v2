@@ -10,5 +10,5 @@ socket.on('disconnect', () => {
 
 socket.on('wind:update', (data) => {
     const lastestDiv = document.getElementById('latestWind');
-    lastestDiv.innerHTML = JSON.stringify(data);
+    lastestDiv.innerHTML = `ทิศทาง: ${data.direction} องศา, ความเร็ว ${data.speed} เมตรต่อวินาที`;
 });

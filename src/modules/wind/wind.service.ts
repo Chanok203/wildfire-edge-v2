@@ -3,7 +3,7 @@ import { Prisma } from '@generated/prisma/client';
 import { prisma } from '@/shared/libs/prisma.lib';
 import { socketLib } from '@/shared/libs/socketio.lib';
 
-export class WindSensorService {
+export class WindService {
     async handleIncomingData(payload: any) {
         try {
             // save to DB
@@ -27,31 +27,50 @@ export class WindSensorService {
         }
     }
 
-    async findAll(page: number = 1, limit: number = 10, search?: string) {
+    async findAllForDataTable(
+        page: number,
+        limit: number,
+        sortField: string,
+        sortDir: string,
+        search?: string,
+    ) {
         const skip = (page - 1) * limit;
         const where: Prisma.WindDataWhereInput = search
-            ? {
-                  sensorId: { contains: search, mode: 'insensitive' },
-              }
+            ? { sensorId: { contains: search, mode: 'insensitive' } }
             : {};
-        console.log(where)
-        const [data, total] = await prisma.$transaction([
+
+        const [items, total, filterd] = await prisma.$transaction([
             prisma.windData.findMany({
-                where: where,
-                skip: skip,
+                where,
+                skip,
                 take: limit,
-                orderBy: { createdAt: 'desc' },
+                orderBy: { [sortField]: sortDir },
             }),
+            prisma.windData.count(),
             prisma.windData.count({ where }),
         ]);
-        return {
-            items: data,
-            meta: {
-                total,
-                page,
-                limit,
-                totalPages: Math.ceil(total / limit),
+        return { items, total, filterd };
+    }
+
+    async filterByDate(beginDate: Date | string, endDate: Date | string) {
+        const data = await prisma.windData.findMany({
+            where: {
+                createdAt: {
+                    gte: new Date(beginDate),
+                    lte: new Date(endDate),
+                },
             },
-        };
+            orderBy: { createdAt: 'asc' },
+        });
+        return data;
+    }
+
+    async deleteByDate(beginDate: Date | string, endDate: Date | string) {
+        const result = await prisma.windData.deleteMany({
+            where: {
+                createdAt: { gte: new Date(beginDate), lte: new Date(endDate) },
+            },
+        });
+        return result.count;
     }
 }

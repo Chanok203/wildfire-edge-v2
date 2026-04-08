@@ -1,13 +1,14 @@
 import express from 'express';
 import path from 'path';
 
+import flash from 'connect-flash';
 import cors from 'cors';
 import morgan from 'morgan';
 import nunjucks from 'nunjucks';
 
 import { config } from '@/configs';
-import { homeRouter } from '@/modules/home/home.route';
-import { windSensorRouter } from '@/modules/wind_sensor/wind_sensor.route';
+import { apiRouter, router } from '@/routes';
+import { sessionConfig } from '@/shared/libs/session';
 
 export const app = express();
 
@@ -18,9 +19,45 @@ nunjucks.configure(path.join(__dirname, '..', 'views'), {
 });
 
 app.use(cors());
-app.use(morgan(config.app.isDev ? 'dev' : 'combined'));
 
-app.use('/public', express.static(path.join(__dirname, '..', 'public')));
+if (config.app.isDev) {
+    app.use('/public', express.static(path.join(__dirname, '..', 'public')));
+    app.use(morgan('dev'));
+} else {
+    app.use(morgan('combined'));
+    app.use('/public', express.static(path.join(__dirname, '..', 'public')));
+}
 
-app.use('/', homeRouter);
-app.use('/wind-sensor', windSensorRouter);
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(sessionConfig);
+app.use(flash());
+
+// Flash Middleware
+app.use(async (req, res, next) => {
+    if (req.method !== 'GET') return next();
+
+    const isStaticFile = /\.(.*)$/.test(req.path);
+    const isApi = req.path.startsWith('/api');
+    const isHtml = req.accepts('html');
+
+    if (isApi || isStaticFile || !isHtml) {
+        return next();
+    }
+
+    console.log('FLASH');
+    res.locals.flash_msg = req.flash();
+    next();
+});
+
+app.use('/', router);
+app.use('/api', apiRouter);
+
+app.use((req, res, next) => {
+    res.send('404 NotFound');
+});
+
+app.use((err: any, req: any, res: any, next: any) => {
+    console.error(err);
+    res.send('500 ServerInternalError');
+});

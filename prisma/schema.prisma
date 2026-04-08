@@ -20,5 +20,6 @@ model WindData {
   direction Int
   sensorTs  Int
 
+  @@index([sensorId])
   @@index([createdAt]) 
 }

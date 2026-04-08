@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}ประวัติข้อมูลลม{% endblock title %}
+
+{% block style %}
+<link rel="stylesheet" href="/public/vendor/data-tables/css/dataTables.bootstrap5.css">
+{% endblock style %}
+
+{% block content %}
+
+<h2>ประวัติข้อมูลลม</h2>
+
+<table class="table table-stripped" id="windHistoryTable">
+    <thead>
+        <tr>
+            <th>วันที่ทำรายการ</th>
+            <th>ชื่อไฟล์ (ช่วงเวลา)</th>
+            <th>ขนาดไฟล์</th>
+            <th>จัดการ</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+{% endblock content %}
+
+{% block scripts%}
+<script src="/public/vendor/data-tables/js/jquery-3.7.1.js"></script>
+<script src="/public/vendor/data-tables/js/dataTables.js"></script>
+<script src="/public/vendor/data-tables/js/dataTables.bootstrap5.js"></script>
+<script>
+    $(document).ready(function () {
+        $("#windHistoryTable").DataTable({
+            processing: true,
+            serverSide: true,
+            language: {
+                search: "ค้นหา",
+                searchPlaceholder: "ชื่อไฟล์",
+                info: "แสดง _START_ ถึง _END_ จากทั้งหมด _TOTAL_",
+                "infoEmpty": "ไม่พบข้อมูล",
+            },
+            ajax: {
+                url: '/api/wind/history',
+                type: 'POST',
+            },
+            order: [[0, 'desc']],
+            columns: [
+                {
+                    data: 'createdAt', render: function (data) {
+                        if (!data) return "-";
+                        const date = new Date(data);
+                        return date.toLocaleDateString("th-TH", {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit',
+                        })
+                    }
+                },
+                {
+                    data: "name"
+                },
+                {
+                    data: "size"
+                },
+                {
+                    data: null, orderable: false, searchable: false, render: function (data, type, row) {
+                        return `
+                        <div style="display: flex; gap: 16px">
+                            <form action="/wind/history/download/${data.name}" method="POST">
+                                <button type="submit" class="btn btn-primary">ดาวน์โหลด</button>
+                            </form>
+                            <form action="/wind/history/delete/${data.name}" onsubmit="return confirm('คุณแน่ใจแล้วใช่ไหมว่าต้องการลบ ${data.name}?')" method="POST">
+                                <button type="submit" class="btn btn-danger">ลบ</button>
+                            </form>
+                        </div>
+                        `;
+                    }
+                }
+            ]
+        })
+    });
+</script>
+{% endblock scripts%}

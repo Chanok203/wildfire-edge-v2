@@ -1,8 +1,8 @@
-import { WindSensorService } from '@/modules/wind_sensor/wind_sensor.service';
+import { WindService } from '@/modules/wind/wind.service';
 import { mqttLib } from '@/shared/libs/mqtt.lib';
 
 export const initWindSensorMQTT = () => {
-    const service = new WindSensorService();
+    const service = new WindService();
 
     mqttLib.client?.subscribe('wind_data');
 
