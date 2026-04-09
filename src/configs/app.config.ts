@@ -6,6 +6,7 @@ import { getEnv } from '@/shared/utils/env.util';
 const env = getEnv('NODE_ENV');
 
 export const appConfig = {
+    publicIp: getEnv('PUBLIC_IP'),
     host: getEnv('HOST'),
     port: Number(getEnv('PORT')),
     secret: getEnv('SECRET'),

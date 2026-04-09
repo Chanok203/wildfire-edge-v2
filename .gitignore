@@ -7,6 +7,7 @@ venv/
 docker/**/data/
 docker/**/log/
 
+mock/*.mp4
 media/csv/*
 media/mission/*
 

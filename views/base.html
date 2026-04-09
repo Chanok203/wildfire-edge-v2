@@ -23,7 +23,8 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
                 <div class="navbar-nav">
-                    <a class="nav-link" href="/wind">ข้อมูลลม</a>
+                    <a class="nav-link {% if entity == 'wind' %}active{% endif %}" href="/wind">ข้อมูลลม</a>
+                    <a class="nav-link {% if entity == 'drones' %}active{% endif %}" href="/drones">ข้อมูลโดรน</a>
                 </div>
             </div>
         </div>

@@ -14,6 +14,7 @@ import { redis } from '@/shared/libs/redis.lib';
 import { toCSV } from '@/shared/utils/csv.util';
 import { NotFoundError } from '@/shared/utils/error.utils';
 
+const entity = 'wind';
 const windService = new WindService();
 
 export const renderListWindData = async (req: Request, res: Response) => {
@@ -28,8 +29,10 @@ export const renderListWindData = async (req: Request, res: Response) => {
     };
 
     const sensorStatus = await redis.get('wildfire:sensor:status');
-    const isRecording = await redis.get('wildfire:recording:status') === 'true'
-    res.render('wind/wind_list.html', {
+    const isRecording =
+        (await redis.get('wildfire:recording:status')) === 'true';
+    res.render('wind/wind-list.html', {
+        entity,
         defaultBegin: format(lastMonth),
         defaultEnd: format(now),
         isRecording: isRecording,
@@ -86,7 +89,7 @@ export const exportAndDelete = async (req: Request, res: Response) => {
 };
 
 export const renderCSVHistory = async (req: Request, res: Response) => {
-    res.render('wind/wind_csv_history.html');
+    res.render('wind/wind-csv-history.html', { entity });
 };
 
 export const downloadCSV = async (req: Request, res: Response) => {

@@ -2,8 +2,12 @@
 
 ## [v0.0.2] - 2026-04-09
 
-- wind sensor
-- wind recording
+- wind
+    - wind sensor
+    - wind recording
+- drones
+    - drones list
+    - drones player
 
 ## [v0.0.1] - 2026-04-08
 - ทำ wind เสร็จแล้ว
