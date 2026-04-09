@@ -77,7 +77,7 @@ export const exportAndDelete = async (req: Request, res: Response) => {
     const endName = format(endDate);
     const filename = `wind_${startName}_to_${endName}.csv`;
 
-    const dir = config.app.csvDir;
+    const dir = config.app.windDir;
     const filepath = path.join(dir, filename);
     writeFileSync(filepath, '\ufeff' + csv, 'utf-8');
 
@@ -94,7 +94,7 @@ export const renderCSVHistory = async (req: Request, res: Response) => {
 
 export const downloadCSV = async (req: Request, res: Response) => {
     const { filename } = req.params;
-    const filepath = path.join(config.app.csvDir, filename as string);
+    const filepath = path.join(config.app.windDir, filename as string);
     if (!existsSync(filepath)) {
         throw new NotFoundError(`FILE NOT FOUND: ${filename}`);
     }
@@ -103,7 +103,7 @@ export const downloadCSV = async (req: Request, res: Response) => {
 
 export const deleteCSV = async (req: Request, res: Response) => {
     const { filename } = req.params;
-    const filepath = path.join(config.app.csvDir, filename as string);
+    const filepath = path.join(config.app.windDir, filename as string);
     if (!existsSync(filepath)) {
         throw new NotFoundError(`FILE NOT FOUND: ${filename}`);
     }

@@ -40,7 +40,7 @@ export const getWindDataList = async (req: Request, res: Response) => {
 export const getCSVList = async (req: Request, res: Response) => {
     const { draw, start, length, search, order, columns } = req.body;
 
-    const dir = config.app.csvDir;
+    const dir = config.app.windDir;
 
     const files = readdirSync(dir)
         .filter((file) =>

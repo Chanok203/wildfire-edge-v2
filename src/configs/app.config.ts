@@ -12,9 +12,15 @@ export const appConfig = {
     secret: getEnv('SECRET'),
     isDev: env === 'development',
     isProd: env === 'production',
-    csvDir: path.resolve(__dirname, '..', '..', 'media', 'csv'),
+    windDir: path.resolve(__dirname, '..', '..', 'media', 'wind'),
+    droneDir: path.resolve(__dirname, '..', '..', 'media', 'drones'),
 } as const;
 
-if (!existsSync(appConfig.csvDir)) {
-    mkdirSync(appConfig.csvDir, { recursive: true });
-}
+[
+    appConfig.windDir,
+    appConfig.droneDir,
+].forEach((dir) => {
+    if (!existsSync(dir)) {
+        mkdirSync(dir, { recursive: true });
+    }
+});
