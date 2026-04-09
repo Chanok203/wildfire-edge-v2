@@ -8,8 +8,8 @@ docker/**/data/
 docker/**/log/
 
 mock/*.mp4
-media/csv/*
-media/mission/*
+media/wind/*
+media/drones/*
 
 !**/.gitkeep
 /generated/prisma
