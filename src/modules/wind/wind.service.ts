@@ -4,24 +4,30 @@ import { prisma } from '@/shared/libs/prisma.lib';
 import { socketLib } from '@/shared/libs/socketio.lib';
 
 export class WindService {
-    async handleIncomingData(payload: any) {
+    async handleIncomingData(payload: any, doSave: boolean) {
         try {
-            // save to DB
-            const windData = await prisma.windData.create({
-                data: {
-                    sensorId: payload.id,
-                    speed: payload.speed,
-                    direction: payload.direction,
-                    sensorTs: payload.ts,
-                },
-            });
+            const data = {
+                id: payload.id,
+                speed: payload.speed,
+                direction: payload.direction,
+                timestamp: new Date(),
+                sensorTs: payload.ts,
+            };
+
+            if (doSave) {
+                // save to DB
+                const windData = await prisma.windData.create({
+                    data: {
+                        sensorId: data.id,
+                        speed: data.speed,
+                        direction: data.direction,
+                        sensorTs: data.sensorTs,
+                        createdAt: data.timestamp,
+                    },
+                });
+            }
             // push to client
-            socketLib.emit('wind:update', {
-                id: windData.sensorId,
-                speed: windData.speed,
-                direction: windData.direction,
-                timestamp: windData.createdAt,
-            });
+            socketLib.emit('wind:data:update', data);
         } catch (error) {
             console.error('[WIND SENSOR] Insert Error', error);
         }

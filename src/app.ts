@@ -9,6 +9,7 @@ import nunjucks from 'nunjucks';
 import { config } from '@/configs';
 import { apiRouter, router } from '@/routes';
 import { sessionConfig } from '@/shared/libs/session';
+import { BadRequestError, NotFoundError } from '@/shared/utils/error.utils';
 
 export const app = express();
 
@@ -45,7 +46,6 @@ app.use(async (req, res, next) => {
         return next();
     }
 
-    console.log('FLASH');
     res.locals.flash_msg = req.flash();
     next();
 });
@@ -59,5 +59,20 @@ app.use((req, res, next) => {
 
 app.use((err: any, req: any, res: any, next: any) => {
     console.error(err);
+
+    if (err instanceof NotFoundError) {
+        return res.status(err.statusCode).json({
+            status: 'fail',
+            data: err.message,
+        })
+    }
+
+    if (err instanceof BadRequestError) {
+        return res.status(err.statusCode).json({
+            status: 'fail',
+            data: err.message,
+        })
+    }
+
     res.send('500 ServerInternalError');
 });

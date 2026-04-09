@@ -15,30 +15,3 @@ export class BadRequestError extends Error {
         this.name = 'BadRequest';
     }
 }
-
-export class UnauthorizedError extends Error {
-    statusCode = 401;
-
-    constructor(message: string = 'Unauthorized access') {
-        super(message);
-        this.name = 'UnauthorizedError';
-    }
-}
-
-export class ForbiddenError extends Error {
-    statusCode = 403;
-
-    constructor(message: string = 'Permission denied') {
-        super(message);
-        this.name = 'ForbiddenError';
-    }
-}
-
-export class ConflictError extends Error {
-    statusCode = 409;
-
-    constructor(message: string) {
-        super(message);
-        this.name = 'ConflictError';
-    }
-}

@@ -4,6 +4,9 @@ import path from 'path';
 
 import { config } from '@/configs';
 import { WindService } from '@/modules/wind/wind.service';
+import { redis } from '@/shared/libs/redis.lib';
+import { socketLib } from '@/shared/libs/socketio.lib';
+import { BadRequestError } from '@/shared/utils/error.utils';
 
 const windService = new WindService();
 
@@ -58,5 +61,32 @@ export const getCSVList = async (req: Request, res: Response) => {
         recordsTotal: files.length,
         recordsFiltered: files.length,
         data: files,
+    });
+};
+
+export const getSensorStatus = async (req: Request, res: Response) => {
+    const status = await redis.get(`wildfire:sensor:status`);
+    res.json({
+        status: 'success',
+        data: {
+            status,
+        },
+    });
+};
+
+export const setRecording = async (req: Request, res: Response) => {
+    const { isRecording } = req.body;
+    if (typeof isRecording !== 'boolean') {
+        throw new BadRequestError(`"isRecording" ต้องเป็น boolean`);
+    }
+
+    await redis.set('wildfire:recording:status', String(isRecording));
+    socketLib.emit('wind:recording:update', isRecording);
+    res.json({
+        status: 'success',
+        data: {
+            isRecording,
+            message: isRecording ? "เริ่มการบันทึกข้อมูล" : "หยุดการบันทึกข้อมูล"
+        },
     });
 };

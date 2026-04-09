@@ -2,10 +2,10 @@ import { RedisStore } from 'connect-redis';
 import session from 'express-session';
 
 import { config } from '@/configs';
-import { redisConnection } from '@/shared/libs/redis.lib';
+import { redis } from '@/shared/libs/redis.lib';
 
 const sessionStore = new RedisStore({
-    client: redisConnection,
+    client: redis,
     prefix: 'sess:',
 });
 

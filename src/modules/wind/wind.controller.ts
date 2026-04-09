@@ -10,6 +10,7 @@ import path from 'path';
 
 import { config } from '@/configs';
 import { WindService } from '@/modules/wind/wind.service';
+import { redis } from '@/shared/libs/redis.lib';
 import { toCSV } from '@/shared/utils/csv.util';
 import { NotFoundError } from '@/shared/utils/error.utils';
 
@@ -26,9 +27,13 @@ export const renderListWindData = async (req: Request, res: Response) => {
         return new Date(d.getTime() - offset).toISOString().slice(0, 16);
     };
 
+    const sensorStatus = await redis.get('wildfire:sensor:status');
+    const isRecording = await redis.get('wildfire:recording:status') === 'true'
     res.render('wind/wind_list.html', {
         defaultBegin: format(lastMonth),
         defaultEnd: format(now),
+        isRecording: isRecording,
+        sensorStatus: sensorStatus,
     });
 };
 
@@ -80,8 +85,8 @@ export const exportAndDelete = async (req: Request, res: Response) => {
     res.send('\ufeff' + csv);
 };
 
-export const renderHistory = async (req: Request, res: Response) => {
-    res.render('wind/history.html');
+export const renderCSVHistory = async (req: Request, res: Response) => {
+    res.render('wind/wind_csv_history.html');
 };
 
 export const downloadCSV = async (req: Request, res: Response) => {
@@ -102,5 +107,5 @@ export const deleteCSV = async (req: Request, res: Response) => {
 
     unlinkSync(filepath);
     req.flash('danger', `คุณลบไฟล์ ${filename} สำเร็จแล้ว`);
-    res.redirect('/wind/history');
+    res.redirect('/wind/csv-history');
 };

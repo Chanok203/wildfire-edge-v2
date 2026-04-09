@@ -7,19 +7,49 @@
 {% endblock style %}
 
 {% block content %}
-<h2>ข้อมูลลม <span class="fs-6">(ล่าสุด: <span id="latestWind"></span>)</span></h2>
+<h2>ข้อมูลลม</h2>
 
-<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exportModal">
-    ส่งออกเป็น CSV
-</button>
+<div class="d-flex align-items-center mb-3">
+    <div id="sensor-status-container">
+        <span id="status-online" class="badge bg-success d-none">
+            <i class="bi bi-broadcast"></i> เซ็นเซอร์เชื่อมต่ออยู่
+        </span>
+        <span id="status-offline" class="badge bg-danger pulse-danger">
+            <i class="bi bi-broadcast-pin"></i> ไม่พบเซ็นเซอร์
+        </span>
+    </div>
 
-<a href="/wind/history" class="btn btn-outline-primary">ประวัติการส่งออก</a>
+    <small class="ms-3 text-muted" id="last-update-wind">
+        รอข้อมูลจากเซ็นเซอร์...
+    </small>
+</div>
 
-<div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModalLabel" aria-hidden="true">
+<div class="mb-3">
+    <label class="form-label d-block">สถานะการบันทึกข้อมูลลม</label>
+    {% if isRecording %}
+    <button id="btn-toggle-record" class="btn btn-danger btn-lg shadow-sm" onclick="handleToggle(false)">
+        <i class="bi bi-stop-circle-fill"></i> หยุดการบันทึก
+    </button>
+    {% else %}
+    <button id="btn-toggle-record" class="btn btn-outline-success btn-lg shadow-sm" onclick="handleToggle(true)">
+        <i class="bi bi-play-circle-fill"></i> เริ่มบันทึกข้อมูล
+    </button>
+    {% endif %}
+</div>
+
+<div class="mb-3">
+    <label class="form-label d-block">การส่งออกข้อมูล</label>
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#export-modal">
+        ส่งออกเป็น CSV
+    </button>
+    <a href="/wind/csv-history" class="btn btn-outline-primary">ประวัติการส่งออก</a>
+</div>
+
+<div class="modal fade" id="export-modal" tabindex="-1" aria-labelledby="export-modal-label" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h1 class="modal-title fs-5" id="exportModalLabel">ส่งออกเป็น CSV</h1>
+                <h1 class="modal-title fs-5" id="export-modal-label">ส่งออกเป็น CSV</h1>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form id="exportForm" action="/wind/export" method="post">
@@ -46,7 +76,7 @@
     </div>
 </div>
 
-<table class="table table-stripped" id="windTable">
+<table class="table table-stripped" id="wind-table">
     <thead>
         <tr>
             <th>เซ็นเซอร์</th>
@@ -65,43 +95,5 @@
 <script src="/public/vendor/data-tables/js/dataTables.js"></script>
 <script src="/public/vendor/data-tables/js/dataTables.bootstrap5.js"></script>
 <script src="/socket.io/socket.io.js"></script>
-<script src="/public/js/handle-mqtt.js"></script>
-<script>
-    $(document).ready(function () {
-        $("#windTable").DataTable({
-            language: {
-                search: "ค้นหา",
-                searchPlaceholder: "ชื่อเซ็นเซอร์",
-                info: "แสดง _START_ ถึง _END_ จากทั้งหมด _TOTAL_",
-                "infoEmpty": "ไม่พบข้อมูล",
-            },
-            processing: true,
-            serverSide: true,
-            ajax: {
-                url: '/api/wind',
-                type: 'POST',
-            },
-            order: [[1, 'desc']],
-            columns: [
-                { data: 'sensorId' },
-                {
-                    data: 'createdAt', render: function (data) {
-                        if (!data) return "-";
-                        const date = new Date(data);
-                        return date.toLocaleDateString("th-TH", {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            second: '2-digit',
-                        })
-                    }
-                },
-                { data: 'direction' },
-                { data: 'speed' },
-            ]
-        })
-    });
-</script>
+<script src="/public/js/wind/wind-list.js"></script>
 {% endblock scripts%}
