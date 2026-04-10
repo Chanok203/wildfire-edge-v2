@@ -4,10 +4,6 @@ venv/
 
 .env
 
-docker/**/data/
-docker/**/log/
-
-mock/*.mp4
 media/wind/*
 media/drones/*
 
