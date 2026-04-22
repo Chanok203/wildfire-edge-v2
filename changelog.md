@@ -1,5 +1,14 @@
 # Changelog
 
+## [v0.0.3] - 2026-04-22
+
+- hotspot-manager
+    - list
+    - create
+    - view (player)
+    - delete
+    - deleteAll
+
 ## [v0.0.2] - 2026-04-09
 
 - wind

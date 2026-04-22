@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 
-{% block title %}ข้อมูลลม{% endblock title %}
+{% block title %}เซ็นเซอร์ลม{% endblock title %}
 
 {% block style %}
 <link rel="stylesheet" href="/public/vendor/data-tables/css/dataTables.bootstrap5.css">
 {% endblock style %}
 
 {% block content %}
-<h2>ข้อมูลลม</h2>
+<h2>เซ็นเซอร์ลม</h2>
 
 <div class="d-flex align-items-center mb-3">
     <div id="sensor-status-container">
@@ -25,7 +25,7 @@
 </div>
 
 <div class="mb-3">
-    <label class="form-label d-block">สถานะการบันทึกข้อมูลลม</label>
+    <label class="form-label d-block">สถานะการบันทึกเซ็นเซอร์ลม</label>
     {% if isRecording %}
     <button id="btn-toggle-record" class="btn btn-danger btn-lg shadow-sm" onclick="handleToggle(false)">
         <i class="bi bi-stop-circle-fill"></i> หยุดการบันทึก

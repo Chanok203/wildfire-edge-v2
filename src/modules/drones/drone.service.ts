@@ -3,7 +3,7 @@ import axios from 'axios';
 import { config } from '@/configs';
 
 export class DroneService {
-    private readonly baseUrl = `${config.mediamtx.url}/v3`;
+    private readonly baseUrl = `${config.mediamtx.api}/v3`;
 
     async getDroneList() {
         try {
@@ -33,7 +33,7 @@ export class DroneService {
             }
             return allItems
                 .filter((path: any) => {
-                    return path.ready === true;
+                    return (!path.name.startsWith("AI")) && (path.ready === true);
                 })
                 .map((path: any) => ({
                     id: path.name,
