@@ -1,5 +1,6 @@
 import { appConfig } from '@/configs/app.config';
 import { dbConfig } from '@/configs/db.config';
+import { forecastConfig } from '@/configs/forecast.config';
 import { hotspotDetectionConfig } from '@/configs/hotspot-detection.config';
 import { mediamtxConfig } from '@/configs/mediamtx.config';
 import { mqttConfig } from '@/configs/mqtt.config';
@@ -12,4 +13,5 @@ export const config = {
     mqtt: mqttConfig,
     mediamtx: mediamtxConfig,
     hotspotDetection: hotspotDetectionConfig,
+    forecast: forecastConfig,
 } as const;

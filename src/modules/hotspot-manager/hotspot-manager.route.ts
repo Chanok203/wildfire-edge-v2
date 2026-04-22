@@ -10,6 +10,7 @@ router.post('/create', controller.handleCreateInstance);
 router.post('/delete-all', controller.handleDeleteAllInstances);
 router.post('/:droneId/delete', controller.handleDeleteInstance);
 router.get('/:droneId/player', controller.renderInstancePlayer);
+router.post('/:droneId/extend-time', controller.handleExtendTime);
 
 const apiRouter = Router();
 

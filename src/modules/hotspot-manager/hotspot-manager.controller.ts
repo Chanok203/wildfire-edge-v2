@@ -64,3 +64,14 @@ export const handleDeleteAllInstances = async (req: Request, res: Response) => {
     }
     res.redirect('/hotspot-manager/');
 };
+
+export const handleExtendTime = async (req: Request, res: Response) => {
+    const droneId = req.params.droneId as string;
+    const extended = await hotspotManagerService.extendTimeById(droneId);
+    if (extended) {
+        req.flash('success', `คุณต่อเวลาให้ตัวตรวจจับหัวไฟแล้ว (${droneId})`);
+    } else {
+        req.flash('danger', `คุณต่อเวลาให้ตัวตรวจจับหัวไฟไม่สำเร็จ (${droneId})`);
+    }
+    res.redirect('/hotspot-manager/');
+};

@@ -9,6 +9,8 @@
     - delete
     - deleteAll
 
+- forecast (route, frontend)
+
 ## [v0.0.2] - 2026-04-09
 
 - wind

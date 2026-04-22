@@ -5,7 +5,7 @@ import { config } from '@/configs';
 export class HotspotManagerService {
     private readonly baseUrl = `${config.hotspotDetection.url}/api/v1/hotspot-detection`;
 
-    async getList() {
+    async getList(): Promise<any[]> {
         try {
             const url = `${this.baseUrl}`;
             const response = await axios.get(url);
@@ -64,8 +64,59 @@ export class HotspotManagerService {
             const response = await axios.delete(url);
             return response.data.status === 'success';
         } catch (error) {
-            console.error(`[HOTSPOT_DETECTION] Error delete an instance (${id})`);
+            console.error(
+                `[HOTSPOT_DETECTION] Error delete an instance (${id})`,
+            );
             return false;
+        }
+    }
+
+    async getById(id: string) {
+        try {
+            const url = `${this.baseUrl}/${id}`;
+            const response = await axios.get(url);
+            if (response.data.status !== 'success') {
+                throw new Error(
+                    `[HOTSPOT_DETECTION] Error get an instance (${id})`,
+                );
+            } else {
+                return response.data.data;
+            }
+        } catch (error) {
+            console.error(`[HOTSPOT_DETECTION] Error get an instance (${id})`);
+        }
+    }
+
+    async extendTimeById(id: string) {
+        try {
+            const url = `${this.baseUrl}/${id}`;
+            const response = await axios.patch(url);
+            if (response.data.status !== 'success') {
+                throw new Error(
+                    `[HOTSPOT_DETECTION] Error extendTime for an instance (${id})`,
+                );
+            } else {
+                return response.data.data;
+            }
+        } catch (error) {
+            console.error(
+                `[HOTSPOT_DETECTION] Error extendTime for an instance (${id})`,
+            );
+        }
+    }
+
+    async getSnapShot(id: string) {
+        try {
+            const url = `${this.baseUrl}/${id}/snapshot`;
+            const response = await axios.get(url, {
+                responseType: 'arraybuffer',
+            });
+            const buffer = Buffer.from(response.data, 'binary');
+            return buffer.toString('base64');
+        } catch (error) {
+            console.error(
+                `[HOTSPOT_DETECTION] Error extendTime for an instance (${id})`,
+            );
         }
     }
 }

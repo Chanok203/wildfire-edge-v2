@@ -33,6 +33,11 @@ const table = $('#hotspot-manager-table').DataTable({
                             <i class="bi bi-trash"></i> ปิด
                         </button>
                     </form>
+                    <form action="/hotspot-manager/${data.id}/extend-time" method="POST">
+                        <button class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-clock"></i> ต่อเวลา
+                        </button>
+                    </form>
                 </div>
                 `;
             },

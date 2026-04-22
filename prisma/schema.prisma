@@ -21,5 +21,55 @@ model WindData {
   sensorTs  Int
 
   @@index([sensorId])
-  @@index([createdAt]) 
+  @@index([createdAt])
+  @@map("wind_data")
+}
+
+model Forecast {
+  id         String     @id
+  name       String
+  droneName  String     @map("drone_name")
+  aiStatus   AIStatus   @default(PENDING) @map("ai_status")
+  pushStatus PushStatus @default(IDLE) @map("push_status")
+  latitude   Float
+  longitude  Float
+  inputData  Json?      @map("input_data")
+  createdAt  DateTime   @default(now()) @map("created_at")
+  updatedAt  DateTime   @updatedAt @map("updated_at")
+
+  results ForecastResult[]
+
+  @@index([id])
+  @@map("forecast")
+}
+
+model ForecastResult {
+  id          String   @id @default(uuid())
+  forecastId  String   @map("forecast_id")
+  forecast    Forecast @relation(fields: [forecastId], references: [id], onDelete: Cascade)
+  filename    String
+  minutes     Int
+  validAt     DateTime @map("valid_at")
+  geojsonData Json     @map("geojson_data")
+
+  @@map("forecast_result")
+}
+
+enum AIStatus {
+  PENDING
+  CREATE_INPUT
+  IN_QUEUE
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELED
+}
+
+enum PushStatus {
+  IDLE
+  PENDING
+  PUSHING
+  PUSHED
+  FAILED
+  CANCELED
 }
