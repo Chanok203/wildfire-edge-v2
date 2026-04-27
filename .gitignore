@@ -5,7 +5,7 @@ venv/
 .env
 
 media/wind/*
-media/drones/*
+media/forecast/*
 
 !**/.gitkeep
 /generated/prisma

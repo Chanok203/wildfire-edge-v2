@@ -4,7 +4,7 @@ const table = $('#hotspot-manager-table').DataTable({
     info: false,
     ordering: false,
     processing: true,
-    serverSide: true,
+    serverSide: false,
     ajax: {
         url: '/api/hotspot-manager',
         type: 'POST',

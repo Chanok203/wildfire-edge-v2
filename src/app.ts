@@ -8,6 +8,7 @@ import nunjucks from 'nunjucks';
 
 import { config } from '@/configs';
 import { apiRouter, router } from '@/routes';
+import { bullBoardAdapter } from '@/shared/libs/bullboard.lib';
 import { sessionConfig } from '@/shared/libs/session';
 import { BadRequestError, NotFoundError } from '@/shared/utils/error.utils';
 
@@ -52,6 +53,7 @@ app.use(async (req, res, next) => {
 
 app.use('/', router);
 app.use('/api', apiRouter);
+app.use('/admin/queues', bullBoardAdapter.getRouter());
 
 app.use((req, res, next) => {
     res.send('404 NotFound');
@@ -64,14 +66,14 @@ app.use((err: any, req: any, res: any, next: any) => {
         return res.status(err.statusCode).json({
             status: 'fail',
             data: err.message,
-        })
+        });
     }
 
     if (err instanceof BadRequestError) {
         return res.status(err.statusCode).json({
             status: 'fail',
             data: err.message,
-        })
+        });
     }
 
     res.send('500 ServerInternalError');

@@ -109,6 +109,6 @@ export const deleteCSV = async (req: Request, res: Response) => {
     }
 
     unlinkSync(filepath);
-    req.flash('danger', `คุณลบไฟล์ ${filename} สำเร็จแล้ว`);
+    req.flash('success', `คุณลบไฟล์ ${filename} สำเร็จแล้ว`);
     res.redirect('/wind/csv-history');
 };

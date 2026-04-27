@@ -8,12 +8,14 @@ import {
     ForecastInput,
     ForecastSchema,
 } from '@/modules/forecast/forecast.schema';
+import { ForecastService } from '@/modules/forecast/forecast.service';
 import { HotspotManagerService } from '@/modules/hotspot-manager/hotspot-manager.service';
 
 const entity = 'forecast';
 
 const droneService = new DroneService();
 const hotspotManagerService = new HotspotManagerService();
+const forecastService = new ForecastService();
 
 export const renderForecastList = async (req: Request, res: Response) => {
     const droneList = await droneService.getDroneList();
@@ -23,7 +25,6 @@ export const renderForecastList = async (req: Request, res: Response) => {
 export const renderForecastCreate = async (req: Request, res: Response) => {
     const forecastName = req.query.name as string;
     const droneId = req.query.droneId as string;
-    const forecastId = `forecast_${uuidv4()}`;
     const src = `http://${config.app.publicIp}:8889/AI/${droneId}`;
 
     const instance = await hotspotManagerService.getById(droneId);
@@ -48,7 +49,6 @@ export const renderForecastCreate = async (req: Request, res: Response) => {
         entity,
         forecastName,
         droneId,
-        forecastId,
         src,
     });
 };
@@ -56,13 +56,16 @@ export const renderForecastCreate = async (req: Request, res: Response) => {
 export const handleForecastCreate = async (req: Request, res: Response) => {
     try {
         const input: ForecastInput = ForecastSchema.parse(req.body);
-
-        const snapshot = await hotspotManagerService.getSnapShot(input.droneId);
-        if (!snapshot) {
-            throw new Error(`ไม่สามารถสร้าง snapshot ได้`);
+        const data = await hotspotManagerService.getAnalysis(input.droneId);
+        if (!data) {
+            throw new Error(`ไม่สามารถเตรียมได้`);
         }
-
-        res.render('forecast/forecast-confirm.html', { snapshot, ...input });
+        data.bboxes = JSON.stringify(data.bboxes, null, 2);
+        res.render('forecast/forecast-confirm.html', {
+            entity,
+            data,
+            ...input,
+        });
     } catch (error) {
         console.error(error);
         req.flash('danger', 'ไม่สามารถเตรียมข้อมูลได้');
@@ -70,3 +73,12 @@ export const handleForecastCreate = async (req: Request, res: Response) => {
     }
 };
 
+export const handleForecastDelete = async (req: Request, res: Response) => {
+    const { forecastId } = req.params;
+    const forecast = await forecastService.deleteById(forecastId as string);
+    req.flash(
+        'success',
+        `คุณลบภารกิจ ${forecast.name} (${forecast.id}) สำเร็จแล้ว`,
+    );
+    res.redirect(`/forecast`);
+};

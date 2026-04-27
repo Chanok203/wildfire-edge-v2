@@ -119,4 +119,19 @@ export class HotspotManagerService {
             );
         }
     }
+
+    async getAnalysis(id: string) {
+        try {
+            const url = `${this.baseUrl}/${id}/analysis`;
+            const response = await axios.get(url);
+            if (response.data.status !== "success") {
+                throw new Error(`${response.data}`)
+            }
+            return response.data.data;
+        } catch (error) {
+            console.error(
+                `[HOTSPOT_DETECTION] Error extendTime for an instance (${id})`,
+            );
+        }
+    }
 }

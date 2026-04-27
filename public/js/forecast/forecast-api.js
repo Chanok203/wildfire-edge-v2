@@ -13,6 +13,7 @@ const progressContainer = document.querySelector('.progress');
 const viewResultBtn = document.getElementById('viewResultBtn');
 const startBtn = document.getElementById('startBtn');
 
+
 const trackStatus = async (id, { onStart, onUpdate, onFinished, onError }) => {
     if (onStart) onStart();
 
@@ -23,9 +24,15 @@ const trackStatus = async (id, { onStart, onUpdate, onFinished, onError }) => {
                 throw new Error(`ไม่สามารถตรวจสอบสถานะได้`);
             }
 
-            const { aiStatus, pushStatus } = response.data.data;
+            const { aiStatus, pushStatus } = response.data.data.forecast;
 
-            if (onUpdate) onUpdate({ aiStatus, pushStatus });
+            if (onUpdate) {
+                try {
+                    onUpdate({ aiStatus, pushStatus });
+                } catch (error) {
+                    console.error("[UI Update Error]:", uiError);
+                }
+            }
 
             if (
                 aiStatus === 'COMPLETED' ||
@@ -33,7 +40,7 @@ const trackStatus = async (id, { onStart, onUpdate, onFinished, onError }) => {
                 aiStatus === 'CANCELED'
             ) {
                 clearInterval(checkStatus);
-                if (onFinished) onFinished(response.data.data);
+                if (onFinished) onFinished(response.data.data.forecast);
             }
         } catch (error) {
             console.error(`[Check Status] Error: พบข้อผิดพลาด`);
@@ -57,7 +64,8 @@ startBtn.onclick = async () => {
         if (response.data.status !== 'success') {
             throw new Error(`[Create] Error: เกิดข้อผลพลาด`);
         }
-        trackStatus(inputData.forecastId, {
+        const forecastId = response.data.data.forecast.id;
+        trackStatus(forecastId, {
             onStart: (data) => {
                 progressBar.classList.remove('bg-primary');
                 progressBar.classList.add('bg-primary');
@@ -70,7 +78,7 @@ startBtn.onclick = async () => {
                 progressContainer.setAttribute('aria-valuenow', percentage);
 
                 if (
-                    ['CAPTURING', 'WAITING_AI', 'AI_PROCESSING'].includes(
+                    ['IN_QUEUE', 'PROCESSING', 'COMPLETED'].includes(
                         data.aiStatus,
                     )
                 ) {

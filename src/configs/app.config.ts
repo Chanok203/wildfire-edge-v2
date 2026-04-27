@@ -13,12 +13,12 @@ export const appConfig = {
     isDev: env === 'development',
     isProd: env === 'production',
     windDir: path.resolve(__dirname, '..', '..', 'media', 'wind'),
-    droneDir: path.resolve(__dirname, '..', '..', 'media', 'drones'),
+    forecastDir: path.resolve(__dirname, '..', '..', 'media', 'forecast'),
 } as const;
 
 [
     appConfig.windDir,
-    appConfig.droneDir,
+    appConfig.forecastDir,
 ].forEach((dir) => {
     if (!existsSync(dir)) {
         mkdirSync(dir, { recursive: true });

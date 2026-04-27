@@ -2,7 +2,6 @@ import { z } from 'zod';
 
 // กำหนดกฎการตรวจสอบ (Schema)
 export const ForecastSchema = z.object({
-    forecastId: z.string().min(1),
     forecastName: z.string().min(1),
     droneId: z.string().min(1),
 

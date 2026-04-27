@@ -2,7 +2,9 @@ import IORedis from 'ioredis';
 
 import { config } from '@/configs';
 
-export const redis = new IORedis(config.redis.url);
+export const redis = new IORedis(config.redis.url, {
+    maxRetriesPerRequest: null,
+});
 
 redis.on('error', (error) => {
     console.error('[Redis] Connection: Error');

@@ -7,11 +7,14 @@ const router = Router();
 
 router.get("/", controller.renderForecastList);
 router.get("/create", controller.renderForecastCreate);
-router.post("/create", controller.handleForecastCreate);
+router.post("/confirm", controller.handleForecastCreate);
+router.post("/:forecastId/delete", controller.handleForecastDelete);
 
 const apiRouter = Router();
 
+apiRouter.post("/", apiController.getForecastList);
 apiRouter.post("/create", apiController.createForcast);
+apiRouter.get("/:forecastId", apiController.getForcast);
 
 export {
     router as forecastRouter,
