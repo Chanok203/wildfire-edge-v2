@@ -4,20 +4,20 @@ CREATE EXTENSION IF NOT EXISTS postgis;
 -- ลบอันเก่า (ถ้ามี) เพื่อความสะอาด
 DROP VIEW IF EXISTS v_forecast_polygons;
 
-CREATE VIEW v_forecast_polygons AS
+CREATE OR REPLACE VIEW v_forecast_polygons AS
 SELECT 
-    -- 1. บังคับ Type เป็น Integer เพื่อให้ QGIS ใช้เป็น Primary Key ได้ง่าย
-    CAST(fr.id AS INTEGER) AS id, 
+    -- 1. สร้าง Integer ID หลอกขึ้นมา (หัวใจสำคัญ)
+    CAST(row_number() OVER () AS INTEGER) AS qgis_id, 
+    -- 2. ข้อมูลเดิมยังอยู่ครบ
+    fr.id AS original_uuid, 
     fr.forecast_id,
     fr.minutes,
-    -- 2. แปลง JSON เป็น Geometry พร้อมระบุ Type และ SRID ให้ชัดเจนที่สุด
     ST_SetSRID(
         ST_Force2D(
             ST_GeomFromGeoJSON((fr.geojson_data->'geometry')::text)
         ), 
         4326
     )::geometry(Geometry, 4326) AS geom,
-    -- 3. ข้อมูลอื่นๆ
     f.created_at,
     (f.created_at + (fr.minutes || ' minutes')::interval) AS target_time
 FROM "forecast_result" fr

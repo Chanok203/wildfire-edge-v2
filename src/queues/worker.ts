@@ -1,12 +1,15 @@
-import fs from 'fs/promises';
+import fs from 'fs';
 import path from 'path';
 
 import { Prisma } from '@generated/prisma/client';
-import { AIStatus } from '@generated/prisma/enums';
+import { AIStatus, PushStatus } from '@generated/prisma/enums';
+import archiver from 'archiver';
 import axios from 'axios';
 import { Job, Worker } from 'bullmq';
+import FormData from 'form-data';
 
 import { config } from '@/configs';
+import { pushQueue } from '@/queues/queue';
 import { prisma } from '@/shared/libs/prisma.lib';
 import { redis } from '@/shared/libs/redis.lib';
 import { sleep } from '@/shared/utils/sleep.util';
@@ -81,7 +84,7 @@ export const initWorker = () => {
                     throw new Error(`[AI Worker] forecast failed (${id})`);
                 }
 
-                await fs.writeFile(
+                fs.writeFileSync(
                     path.join(dir, 'output', 'result.json'),
                     JSON.stringify(geojson, null, 2),
                 );
@@ -96,8 +99,10 @@ export const initWorker = () => {
                         const filename = item.filename as string;
                         const minutes: number = Number(match[1]);
                         const validAt = item.geojson.valid_at;
-                        const geojsonData = item.geojson.features[0].geometry;
-                        
+                        const geojsonData = {
+                            geometry: item.geojson.features[0].geometry,
+                        };
+
                         return {
                             forecastId,
                             filename,
@@ -120,6 +125,7 @@ export const initWorker = () => {
                     where: { id },
                     data: { aiStatus: AIStatus.COMPLETED },
                 });
+                await pushQueue.add('pushQueue', { id: forecast.id });
                 // Call pushQueue
             } catch (error) {
                 await prisma.forecast.update({
@@ -128,7 +134,38 @@ export const initWorker = () => {
                 });
                 console.error(error);
                 throw error;
-                
+            }
+        },
+        {
+            connection: redis,
+            concurrency: 1,
+        },
+    );
+
+    const pushWorker = new Worker(
+        'pushQueue',
+        async (job: Job) => {
+            const { id } = job.data;
+            console.log(`[PUSH] Starting: ${id}`);
+            try {
+                await prisma.forecast.update({
+                    where: { id },
+                    data: { pushStatus: PushStatus.PUSHING },
+                });
+
+                await zipAndUpload(id);
+
+                await prisma.forecast.update({
+                    where: { id },
+                    data: { pushStatus: PushStatus.PUSHED },
+                });
+            } catch (error) {
+                await prisma.forecast.update({
+                    where: { id },
+                    data: { pushStatus: PushStatus.FAILED },
+                });
+                console.error(error);
+                throw error;
             }
         },
         {
@@ -137,3 +174,44 @@ export const initWorker = () => {
         },
     );
 };
+
+async function zipAndUpload(id: string) {
+    const dir = path.join(config.app.forecastDir, id);
+    const zipPath = path.join(config.app.forecastDir, `${id}.zip`);
+
+    try {
+        await new Promise<void>((resolve, reject) => {
+            const output = fs.createWriteStream(zipPath);
+            const archive = archiver('zip', { zlib: { level: 9 } });
+
+            output.on('close', () => resolve());
+            archive.on('error', (err) => reject(err));
+
+            archive.pipe(output);
+            archive.directory(dir, false);
+            archive.finalize();
+        });
+
+        const form = new FormData();
+        form.append('forecastZip', fs.createReadStream(zipPath));
+        const uploadTarget = new URL('/forecast/upload', config.warroom.url)
+            .href;
+        await axios.post(uploadTarget, form, {
+            headers: {
+                ...form.getHeaders(),
+                'x-api-key': config.warroom.apiKey, // ใช้ API Key ที่คุยกันไว้
+            },
+            maxContentLength: Infinity,
+            maxBodyLength: Infinity,
+            timeout: 600000, // 10 นาที
+        });
+    } catch (error: any) {
+        const errorMsg = error.response?.data?.message || error.message;
+        console.error('Upload failed:', errorMsg);
+        throw new Error(errorMsg);
+    } finally {
+        if (fs.existsSync(zipPath)) {
+            fs.unlinkSync(zipPath);
+        }
+    }
+}

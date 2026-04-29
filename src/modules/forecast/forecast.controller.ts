@@ -10,6 +10,8 @@ import {
 } from '@/modules/forecast/forecast.schema';
 import { ForecastService } from '@/modules/forecast/forecast.service';
 import { HotspotManagerService } from '@/modules/hotspot-manager/hotspot-manager.service';
+import { pushQueue } from '@/queues/queue';
+import { NotFoundError } from '@/shared/utils/error.utils';
 
 const entity = 'forecast';
 
@@ -79,6 +81,27 @@ export const handleForecastDelete = async (req: Request, res: Response) => {
     req.flash(
         'success',
         `คุณลบภารกิจ ${forecast.name} (${forecast.id}) สำเร็จแล้ว`,
+    );
+    res.redirect(`/forecast`);
+};
+
+export const renderView = async (req: Request, res: Response) => {
+    const forecastId = (req.query.forecastId as string) || '';
+    res.render('forecast/forecast-view.html', { entity, forecastId });
+};
+
+export const handlePush = async (req: Request, res: Response) => {
+    const forecastId = req.params.forecastId as string;
+    const forecast = await forecastService.getById(forecastId);
+    if (!forecast) {
+        req.flash('danger', `คุณเริ่มนำส่งภารกิจไม่สำเร็จแล้ว`);
+        return res.redirect(`/forecast`);
+    }
+    // TODO start push
+    pushQueue.add(`pushQueue`, { id: forecast.id });
+    req.flash(
+        'success',
+        `คุณเริ่มนำส่งภารกิจ ${forecast.name} (${forecast.id}) สำเร็จแล้ว`,
     );
     res.redirect(`/forecast`);
 };

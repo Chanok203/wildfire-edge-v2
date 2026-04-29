@@ -5,6 +5,7 @@ import { hotspotDetectionConfig } from '@/configs/hotspot-detection.config';
 import { mediamtxConfig } from '@/configs/mediamtx.config';
 import { mqttConfig } from '@/configs/mqtt.config';
 import { redisConfig } from '@/configs/redis.config';
+import { warroomConfig } from '@/configs/warroom.config';
 
 export const config = {
     app: appConfig,
@@ -14,4 +15,5 @@ export const config = {
     mediamtx: mediamtxConfig,
     hotspotDetection: hotspotDetectionConfig,
     forecast: forecastConfig,
+    warroom: warroomConfig,
 } as const;

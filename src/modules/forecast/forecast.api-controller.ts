@@ -89,3 +89,27 @@ export const getForecastList = async (req: Request, res: Response) => {
         data: items,
     });
 };
+
+export const getForecastForMap = async (req: Request, res: Response) => {
+    const forecastId = req.params.forecastId as string;
+    try {
+        const forecast = await forecastService.getById(forecastId);
+        if (!forecast) {
+            return res.status(404).json({
+                status: 'fail',
+                data: 'Not Found',
+            });
+        }
+        const {inputData, ...data} = forecast;
+        res.json({
+            status: 'success',
+            data: { forecast: data },
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            status: 'error',
+            message: 'Internal Server Error',
+        });
+    }
+}

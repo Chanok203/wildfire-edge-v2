@@ -1,3 +1,22 @@
+const statusMap = {
+    PENDING: 'รอดำเนินการ',
+    CREATE_INPUT: 'กำลังสร้างข้อมูลนำเข้า',
+    IN_QUEUE: 'อยู่ในคิว',
+    PROCESSING: 'กำลังประมวลผล',
+    COMPLETED: 'เสร็จสิ้น',
+    FAILED: 'ล้มเหลว',
+    CANCELED: 'ยกเลิกแล้ว',
+};
+
+const pushMap = {
+    IDLE: 'ยังไม่ได้นำส่ง', // หรือ 'ว่าง'
+    PENDING: 'รอนำส่ง',
+    PUSHING: 'กำลังนำส่งข้อมูล',
+    PUSHED: 'นำส่งสำเร็จ',
+    FAILED: 'นำส่งล้มเหลว',
+    CANCELED: 'ยกเลิกการส่ง',
+};
+
 const table = $('#forecast-table').DataTable({
     language: {
         search: 'ค้นหา',
@@ -38,20 +57,35 @@ const table = $('#forecast-table').DataTable({
                 return `(${data.latitude}, ${data.longitude})`;
             },
         },
-        { data: 'aiStatus' },
-        { data: 'pushStatus' },
+        {
+            data: 'aiStatus',
+            render: function (data) {
+                return statusMap[data];
+            },
+        },
+        {
+            data: 'pushStatus',
+            render: function (data) {
+                return pushMap[data];
+            },
+        },
         {
             data: null,
             render: function (data) {
                 // ดึง data.url ที่ส่งมาจาก Service มาใช้ได้เลย!
                 return `
                     <div class="d-flex flex-row gap-3">
-                        <a href="#" target="_blank" class="btn btn-primary btn-sm">
+                        <a href="/forecast/view?forecastId=${data.id}" target="_self" class="btn btn-primary btn-sm">
                             <i class="bi bi-eye"></i> ดูผลลัพธ์
                         </a>
                         <form action="/forecast/${data.id}/delete" method="POST" onsubmit="return confirm('คุณแน่ใจใช่หรือไม่ว่าจะลบ? (${data.name}, ${data.id})')">
                             <button class="btn btn-danger btn-sm">
                                 <i class="bi bi-trash"></i> ลบออก
+                            </button>
+                        </form>
+                        <form action="/forecast/${data.id}/push" method="POST">
+                            <button class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-upload"></i> อัพโหลด
                             </button>
                         </form>
                     </div>

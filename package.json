@@ -12,6 +12,7 @@
   },
   "devDependencies": {
     "@trivago/prettier-plugin-sort-imports": "^6.0.2",
+    "@types/archiver": "^7.0.0",
     "@types/connect-flash": "^0.0.40",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
@@ -33,6 +34,7 @@
     "@bull-board/express": "^7.0.0",
     "@prisma/adapter-pg": "^7.6.0",
     "@prisma/client": "^7.6.0",
+    "archiver": "^7.0.1",
     "axios": "^1.15.2",
     "bootstrap": "^5.3.8",
     "bullmq": "^5.76.1",
