@@ -109,7 +109,7 @@ startBtn.onclick = async () => {
                     viewResultBtn.innerHTML = `ดูผลลัพธ์`;
                     viewResultBtn.style.display = 'inline-block';
                     viewResultBtn.onclick = () => {
-                        const url = `/forecast/${data.id}`;
+                        const url = `/forecast/view?forecastId=${data.id}`;
                         window.open(url, '_self');
                     };
 

@@ -4,6 +4,7 @@ const refTimeInput = document.getElementById('ref_time');
 const pastMinsInput = document.getElementById('past_mins');
 const futureMinsInput = document.getElementById('future_mins');
 const submitBtn = document.getElementById('submitBtn');
+const filterForm = document.getElementById('filter-form');
 
 const formatToLocalISO = (date) => {
     const tzOffset = date.getTimezoneOffset() * 60000;
@@ -80,30 +81,92 @@ function applyFireFilter(shouldFetch = false) {
 }
 
 function executeFilter(start, end) {
+    // 1. กรองข้อมูล (ใช้ start/end ที่รวม past/future แล้ว)
+    const startISO = new Date(start).toISOString();
+    const endISO = new Date(end).toISOString();
+    const startClean = startISO.slice(0, 16);
+    const endClean = endISO.slice(0, 16);
+
     const filter = [
         'all',
-        ['>=', ['to-string', ['get', 'target_time']], start],
-        ['<=', ['to-string', ['get', 'target_time']], end],
+        [
+            '>=',
+            ['slice', ['to-string', ['get', 'target_time']], 0, 16],
+            startClean,
+        ],
+        [
+            '<=',
+            ['slice', ['to-string', ['get', 'target_time']], 0, 16],
+            endClean,
+        ],
     ];
 
-    // กรอง Layer สีพื้น
+    // 2. จุดสำคัญ: สร้าง "เวลาปัจจุบัน" (Zero Point) จาก Input โดยตรง (ไม่เกี่ยวกับ past/future)
+    const refDateISO = new Date(refTimeInput.value).toISOString();
+    const refTimeClean = refDateISO.slice(0, 16); // นี่คือ "ตอนนี้" ในหน้าปัดนาฬิกาของคุณ
+
+    // 3. คำนวณ Deadline 5 นาทีถัดไปนับจาก "ตอนนี้"
+    const fiveMinsDeadline = new Date(
+        new Date(refDateISO).getTime() + 5 * 60000,
+    )
+        .toISOString()
+        .slice(0, 16);
+
     if (map.getLayer('fire-layer-fill')) {
         map.setFilter('fire-layer-fill', filter);
+
+        map.setPaintProperty('fire-layer-fill', 'fill-color', [
+            'case',
+            // ก้อนที่เกิดก่อน refTime (อดีตตามที่ระบุใน past mins) -> สีเทา
+            [
+                '<',
+                ['slice', ['to-string', ['get', 'target_time']], 0, 16],
+                refTimeClean,
+            ],
+            '#4a4a4a',
+
+            // ก้อนที่อยู่ระหว่าง refTime ถึง +5 นาที (ปัจจุบัน/วิกฤต) -> สีแดงสด
+            [
+                '<=',
+                ['slice', ['to-string', ['get', 'target_time']], 0, 16],
+                fiveMinsDeadline,
+            ],
+            '#ff1a1a',
+
+            // ก้อนที่เหลือ (อนาคตตามที่ระบุใน future mins) -> สีส้มทอง
+            '#ffcc00',
+        ]);
+
+        map.setPaintProperty('fire-layer-fill', 'fill-opacity', [
+            'case',
+            [
+                '<',
+                ['slice', ['to-string', ['get', 'target_time']], 0, 16],
+                refTimeClean,
+            ],
+            0.4,
+            [
+                '<=',
+                ['slice', ['to-string', ['get', 'target_time']], 0, 16],
+                fiveMinsDeadline,
+            ],
+            0.85,
+            0.5,
+        ]);
     }
 
-    // กรอง Layer เส้นขอบ
     if (map.getLayer('fire-layer-outline')) {
         map.setFilter('fire-layer-outline', filter);
     }
 
-    console.log('Filter Applied to both layers:', start, 'to', end);
+    console.log('Timeline Ref Point:', refTimeClean);
+    console.log('Red Zone Deadline:', fiveMinsDeadline);
 }
 
 // เพิ่มปุ่มควบคุม (Zoom In/Out)
 map.addControl(new maplibregl.NavigationControl(), 'top-left');
 
 function setupFireLayers() {
-    // เพิ่ม Source โดยใช้ initForecastId ใน CQL_FILTER ตั้งแต่แรก
     map.addSource('fire-source', {
         type: 'geojson',
         data: `http://localhost:8001/ows/?MAP=/data/edge.qgs&SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAME=fire_forecast&OUTPUTFORMAT=application/json`,
@@ -114,24 +177,23 @@ function setupFireLayers() {
         type: 'line',
         source: 'fire-source',
         paint: {
-            'line-color': '#ffffff', // เส้นขอบสีขาว ตัดกับทุกสี
-            'line-width': 2.5, // ความหนาเส้น
-            'line-opacity': 0.9, // ความเข้มของเส้นขอบ
+            'line-color': '#ffffff',
+            'line-width': 2,
+            'line-opacity': 0.8,
         },
     });
 
-    // 3. Layer สำหรับสีพื้น (Fill) - ปรับสีให้แดงสว่างขึ้น
     map.addLayer({
         id: 'fire-layer-fill',
         type: 'fill',
         source: 'fire-source',
         paint: {
-            'fill-color': '#ff1a1a', // แดงสดสว่าง (สว่างกว่าเดิมเยอะ)
-            'fill-opacity': 0.5, // โปร่งแสงนิดหน่อยเพื่อให้เห็นแผนที่ข้างล่าง
+            // ตั้งค่าพื้นฐานไว้ก่อน executeFilter จะมาทับค่านี้เองครับ
+            'fill-color': '#ff1a1a',
+            'fill-opacity': 0.5,
         },
     });
 
-    // เมื่อทุกอย่างพร้อม (Idle) ให้เริ่มกรองครั้งแรก
     map.on('idle', function initialFilter() {
         if (map.getSource('fire-source') && map.isSourceLoaded('fire-source')) {
             applyFireFilter(false);
@@ -140,7 +202,7 @@ function setupFireLayers() {
     });
 }
 
-function setupRouteLayers() {
+function setupRouteLayersWCS() {
     // กำหนด Mapping ระหว่างค่าใน Select กับ ID ของ Layer และสี
     const routeMapping = [
         {
@@ -175,7 +237,7 @@ function setupRouteLayers() {
         // 1. เพิ่ม Source
         map.addSource(route.sourceId, {
             type: 'geojson',
-            data: `http://localhost:8001/ows/?MAP=/data/edge.qgs&SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAME=${route.typeName}&OUTPUTFORMAT=application/json`,
+            data: `http://localhost:8001/ows/?MAP=/data/edge.qgs&SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAME=${route.typeName}&OUTPUTFORMAT=application/json&SIMPLIFY=10`,
         });
 
         // 2. เพิ่ม Layer
@@ -216,6 +278,132 @@ function setupRouteLayers() {
     });
 }
 
+function setupRouteLayersWFS() {
+    const routeMapping = [
+        { value: 'patrol_car', typeName: 'car' },
+        { value: 'patrol_motorcycle', typeName: 'bike' },
+        { value: 'patrol_walking', typeName: 'walk' },
+    ];
+
+    const patrolSelect = $('#patrol-select');
+
+    routeMapping.forEach((route) => {
+        map.addSource(`${route.typeName}-source`, {
+            type: 'raster',
+            tiles: [
+                `http://localhost:8001/ows/?MAP=/data/edge.qgs&SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&LAYERS=${route.typeName}&CRS=EPSG:3857&BBOX={bbox-epsg-3857}&WIDTH=256&HEIGHT=256&FORMAT=image/png&TRANSPARENT=TRUE`,
+            ],
+            tileSize: 256,
+        });
+
+        map.addLayer({
+            id: `${route.typeName}-layer`,
+            type: 'raster',
+            source: `${route.typeName}-source`,
+            layout: {
+                visibility: patrolSelect.val().includes(route.value)
+                    ? 'visible'
+                    : 'none',
+            },
+        });
+    });
+
+    // Event 'change' ของ Select ใช้ Logic เดิมได้เลยครับ
+}
+
+function setupRouteLayersLazy() {
+    const routeMapping = [
+        {
+            value: 'patrol_car',
+            layerId: 'car-layer',
+            sourceId: 'car-source',
+            typeName: 'car',
+            color: '#ffff00',
+            width: 3,
+        },
+        {
+            value: 'patrol_motorcycle',
+            layerId: 'bike-layer',
+            sourceId: 'bike-source',
+            typeName: 'bike',
+            color: '#00ffff',
+            width: 2,
+        },
+        {
+            value: 'patrol_walking',
+            layerId: 'walk-layer',
+            sourceId: 'walk-source',
+            typeName: 'walk',
+            color: '#33ff33',
+            width: 2,
+        },
+    ];
+
+    const patrolSelect = $('#patrol-select');
+
+    patrolSelect.on('change', function () {
+        const selectedValues = $(this).val() || [];
+
+        routeMapping.forEach((route) => {
+            const isVisible = selectedValues.includes(route.value);
+            const source = map.getSource(route.sourceId);
+
+            if (isVisible) {
+                // ถ้ายังไม่มี Source ให้สร้างใหม่
+                if (!source) {
+                    console.log(`Initial loading for: ${route.typeName}`);
+
+                    // 1. เพิ่ม Source (ใส่ URL ให้ครบ)
+                    map.addSource(route.sourceId, {
+                        type: 'geojson',
+                        data: `http://localhost:8001/ows/?MAP=/data/edge.qgs&SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAME=${route.typeName}&OUTPUTFORMAT=application/json&SIMPLIFY=10`,
+                    });
+
+                    // 2. เช็คตำแหน่งที่จะแทรก (ให้อยู่ใต้ไฟ)
+                    const beforeId = map.getLayer('fire-layer-outline')
+                        ? 'fire-layer-outline'
+                        : undefined;
+
+                    // 3. เพิ่ม Layer (วาง beforeId ไว้นอก Object)
+                    map.addLayer(
+                        {
+                            id: route.layerId,
+                            type: 'line',
+                            source: route.sourceId,
+                            layout: {
+                                'line-join': 'round',
+                                'line-cap': 'round',
+                                visibility: 'visible',
+                            },
+                            paint: {
+                                'line-color': route.color,
+                                'line-width': route.width,
+                                'line-opacity': 0.8,
+                            },
+                        },
+                        beforeId,
+                    );
+                } else {
+                    // ถ้ามีอยู่แล้ว แค่สั่งเปิด
+                    map.setLayoutProperty(
+                        route.layerId,
+                        'visibility',
+                        'visible',
+                    );
+                }
+            } else {
+                // ถ้าติ๊กออก และเลเยอร์ถูกสร้างไว้แล้ว ให้สั่งปิด
+                if (source && map.getLayer(route.layerId)) {
+                    map.setLayoutProperty(route.layerId, 'visibility', 'none');
+                }
+            }
+        });
+    });
+
+    // รันครั้งแรกเพื่อเช็กค่า Default ที่ selected ไว้
+    patrolSelect.trigger('change');
+}
+
 map.on('load', async () => {
     if (initForecastId) {
         try {
@@ -253,12 +441,29 @@ map.on('load', async () => {
     }
 
     // 4. หลังจากเซตค่า Metadata เสร็จแล้ว ค่อยเพิ่ม Source และ Layer ข้อมูลไฟ
-    setupRouteLayers();
+    // setupRouteLayersWCS();
+    // setupRouteLayersWFS();
+    setupRouteLayersLazy();
     setupFireLayers();
 });
 
 // ดักจับ Event เมื่อปุ่มถูกกด
-submitBtn.addEventListener('click', () => {
-    console.log('--- Manual Update Triggered ---');
-    applyFireFilter(true); // สั่ง fetch ใหม่
+// submitBtn.addEventListener('click', () => {
+//     console.log('--- Manual Update Triggered ---');
+//     applyFireFilter(true); // สั่ง fetch ใหม่
+// });
+filterForm.addEventListener('submit', (e) => {
+    // สำคัญมาก: ป้องกันไม่ให้หน้าเว็บ Refresh (ซึ่งเป็นค่าปกติของ form)
+    e.preventDefault();
+
+    console.log('--- Form Submitted (Enter or Click) ---');
+
+    // ตรวจสอบค่าเหมือนเดิม
+    if (!refTimeInput.value) {
+        alert('กรุณาเลือกเวลาตรวจสอบก่อนครับ');
+        return;
+    }
+
+    // รันฟังก์ชันเดิมที่คุณเขียนไว้
+    applyFireFilter(true);
 });
