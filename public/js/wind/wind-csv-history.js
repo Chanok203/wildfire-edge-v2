@@ -1,6 +1,6 @@
 $('#windHistoryTable').DataTable({
     processing: true,
-    serverSide: false,
+    serverSide: true,
     language: {
         search: 'ค้นหา',
         searchPlaceholder: 'ชื่อไฟล์',

@@ -1,0 +1,23 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.apiRouter = exports.router = void 0;
+const express_1 = require("express");
+const drones_route_1 = require("./modules/drones/drones.route");
+const forecast_route_1 = require("./modules/forecast/forecast.route");
+const home_route_1 = require("./modules/home/home.route");
+const hotspot_manager_route_1 = require("./modules/hotspot-manager/hotspot-manager.route");
+const wind_route_1 = require("./modules/wind/wind.route");
+const router = (0, express_1.Router)();
+exports.router = router;
+router.use('/', home_route_1.homeRouter);
+router.use('/wind', wind_route_1.windRouter);
+router.use('/drones', drones_route_1.droneRouter);
+router.use('/hotspot-manager', hotspot_manager_route_1.hotspotManagerRouter);
+router.use('/forecast', forecast_route_1.forecastRouter);
+const apiRouter = (0, express_1.Router)();
+exports.apiRouter = apiRouter;
+apiRouter.use('/wind', wind_route_1.windApiRouter);
+apiRouter.use('/drones', drones_route_1.droneApiRouter);
+apiRouter.use('/hotspot-manager', hotspot_manager_route_1.hotspotManagerApiRouter);
+apiRouter.use('/forecast', forecast_route_1.forecastApiRouter);
+//# sourceMappingURL=routes.js.map
